@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chibi Luis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+<style>
+:root{--skin:#f5d9bd;--skin-shadow:#e8c2a0;--hair:#8a6a4a;--hair-dark:#6e5138;--shirt:#a9d6ee;--shirt-dark:#8fc2dc;--blush:#ff9bb0}
+html,body{margin:0;height:100%;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#stage{width:min(90vw,420px);aspect-ratio:1/1.4;position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
+svg{width:100%;height:100%;display:block;cursor:pointer;overflow:visible}
+#menuBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);right:6px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(36,36,36,.3);color:#fff;font:700 15px/30px sans-serif;padding:0;opacity:.5;z-index:60}
+#menu{position:fixed;top:calc(env(safe-area-inset-top,0px) + 40px);right:6px;z-index:60;display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.97);border:1px solid #d9dee8;border-radius:12px;padding:7px;box-shadow:0 8px 20px rgba(0,0,0,.22)}
+#menu.open{display:flex}
+#menu button{border:0;background:#f1f4f9;border-radius:9px;padding:9px 13px;font:600 13px sans-serif;color:#243049;white-space:nowrap;text-align:left}
+#menu button:active{background:#e2e8f2}
+#menu .danger{background:#ffe3e3;color:#b4232a}
+
+/* ---- orígenes de rotación ---- */
+#float{transform-origin:150px 400px;animation:idleFloat 2.6s ease-in-out infinite}
+#bodyAll{transform-origin:150px 300px}
+#head{transform-origin:150px 238px}
+#legL{transform-origin:130px 312px}#legR{transform-origin:170px 312px}
+#armL{transform-origin:104px 246px}#armR{transform-origin:196px 246px}
+#bodyAll,#head,#legL,#legR,#armL,#armR{transition:transform .45s ease}
+@keyframes idleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#eyelids{animation:blink 4.2s ease-in-out infinite;transform-origin:center}
+@keyframes blink{0%,92%,100%{transform:scaleY(0)}94%,97%{transform:scaleY(1)}}
+
+/* ---- caras ---- */
+.cheek{opacity:0;transition:opacity .25s}
+#mSmile,#mO,#mLaugh,#mKiss,#happyEyes,#sleepEyes,#zzz{opacity:0}
+/* crossfade de expresiones para que no haya cortes bruscos */
+#mNeutral,#mSmile,#mO,#mLaugh,#mKiss,#mScared,#mYawn,#eyes,#happyEyes,#sleepEyes,#scaredEyes,#dizzyEyes,#phone,#laptop,#laptopScreen,#watch,.cheek{transition:opacity .28s ease}
+#float,#bodyAll,#head,#legL,#legR,#armL,#armR{transition:transform .5s cubic-bezier(.4,0,.2,1)}
+#character:is([data-state=blush],[data-state=kiss]) .cheek{opacity:.85}
+#character:is([data-state=wave],[data-state=blush]) #mSmile{opacity:1}
+#character:is([data-state=protect],[data-state=grab]) #mO{opacity:1}
+#character:is([data-state=laugh],[data-state=laughLoop]) #mLaugh{opacity:1}
+#character[data-state=kiss] #mKiss{opacity:1}
+#character:is([data-state=wave],[data-state=blush],[data-state=protect],[data-state=grab],[data-state=laugh],[data-state=laughLoop],[data-state=kiss]) #mNeutral{opacity:0}
+#character:is([data-state=laugh],[data-state=laughLoop],[data-state=kiss]) #eyes{opacity:0}
+#character:is([data-state=laugh],[data-state=laughLoop],[data-state=kiss]) #happyEyes{opacity:1}
+#character[data-state=protect] #eyes,#character[data-pose=sleep] #eyes{opacity:0}
+#character[data-state=protect] #sleepEyes,#character[data-pose=sleep] #sleepEyes{opacity:1}
+
+/* ---- poses persistentes: sentado / dormido ---- */
+#character[data-pose=sit] #bodyAll{transform:translateY(22px)}
+#character[data-pose=sit] #legL{transform:rotate(-30deg)}
+#character[data-pose=sit] #armL{transform:rotate(24deg)}
+#character[data-pose=sit] #legR{transform:rotate(30deg)}
+#character[data-pose=sit] #armR{transform:rotate(-24deg)}
+/* dormir: tumbado horizontal en el suelo */
+#character[data-pose=sleep] #float{animation:none}
+#character[data-pose=sleep] #bodyAll{transform:translate(0,64px) rotate(-84deg) scale(.82)}
+#character[data-pose=sleep] #legL{transform:rotate(-7deg)}
+#character[data-pose=sleep] #legR{transform:rotate(9deg)}
+#character[data-pose=sleep] #armL{transform:rotate(18deg)}
+#character[data-pose=sleep] #armR{transform:rotate(-26deg)}
+#character[data-pose=sleep] #head{transform:rotate(9deg)}
+#character[data-pose=sleep] #zzz{opacity:1}
+#zzz text{font:bold 22px sans-serif;fill:#5a7fa0;animation:zz 2.6s ease-out infinite}
+#zzz text:nth-child(2){animation-delay:.8s}#zzz text:nth-child(3){animation-delay:1.6s}
+@keyframes zz{0%{opacity:0;transform:translate(0,0)}30%{opacity:1}100%{opacity:0;transform:translate(16px,-30px)}}
+
+/* ---- calentar piernas ---- */
+#character[data-state=warm] #legL{animation:stepA .62s ease-in-out 6}
+#character[data-state=warm] #legR{animation:stepB .62s ease-in-out .31s 6}
+#character[data-state=warm] #armL{animation:swingL .62s ease-in-out 6}
+#character[data-state=warm] #armR{animation:swingR .62s ease-in-out 6}
+@keyframes stepA{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px) rotate(-8deg)}}
+@keyframes stepB{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px) rotate(8deg)}}
+@keyframes swingL{0%,100%{transform:rotate(12deg)}50%{transform:rotate(-20deg)}}
+@keyframes swingR{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(20deg)}}
+
+/* ---- saludo ---- */
+#character[data-state=wave] #armR{animation:wave 2.6s ease-in-out 1}
+#character[data-state=wave] #head{transform:rotate(-4deg)}
+@keyframes wave{0%{transform:rotate(0)}15%{transform:rotate(-140deg)}28%{transform:rotate(-118deg)}41%{transform:rotate(-150deg)}54%{transform:rotate(-118deg)}67%{transform:rotate(-150deg)}80%{transform:rotate(-125deg)}90%{transform:rotate(-140deg)}100%{transform:rotate(0)}}
+
+/* ---- toques: cosquillas ---- */
+#character[data-state=protect] #armL{transform:rotate(-150deg)}
+#character[data-state=protect] #head{transform:rotate(6deg) translateX(-3px)}
+#character[data-state=protect] #bodyAll{transform:translateX(3px) scale(.97)}
+#character:is([data-state=laugh],[data-state=laughLoop]) #armL{transform:rotate(-30deg)}
+#character:is([data-state=laugh],[data-state=laughLoop]) #armR{transform:rotate(30deg)}
+#character:is([data-state=laugh],[data-state=laughLoop]) #head{transform:rotate(-5deg)}
+#character[data-state=laugh] #bodyAll{animation:shake .22s ease-in-out infinite alternate}
+#character[data-state=laughLoop] #bodyAll{animation:shake .13s ease-in-out infinite alternate}
+@keyframes shake{0%{transform:translateY(0) rotate(-1.6deg)}100%{transform:translateY(-4px) rotate(1.6deg)}}
+
+/* ---- toques: romántico ---- */
+#character[data-state=blush] #armL{transform:rotate(-40deg)}
+#character[data-state=blush] #armR{transform:rotate(40deg)}
+#character[data-state=blush] #head{transform:rotate(-7deg)}
+#character[data-state=kiss] #armR{animation:kiss 1.1s ease-in-out 1}
+#character[data-state=kiss] #head{transform:rotate(5deg)}
+@keyframes kiss{0%{transform:rotate(0)}25%{transform:rotate(125deg)}55%{transform:rotate(125deg)}80%{transform:rotate(-60deg)}100%{transform:rotate(0)}}
+
+/* ---- agarrado (mantener presionado) ---- */
+#character[data-state=grab] #armL{transform:rotate(168deg)}
+#character[data-state=grab] #armR{transform:rotate(-168deg)}
+#character[data-state=grab] #bodyAll{transform:translateY(-14px)}
+#character[data-state=grab] #legL{animation:dangleL .5s ease-in-out infinite alternate}
+#character[data-state=grab] #legR{animation:dangleR .5s ease-in-out infinite alternate}
+@keyframes dangleL{0%{transform:rotate(-9deg)}100%{transform:rotate(9deg)}}
+@keyframes dangleR{0%{transform:rotate(9deg)}100%{transform:rotate(-9deg)}}
+
+/* --- agarrado: asustado, sudando, forcejeando --- */
+#scaredEyes,#mScared,#sweat,#hatch,#love{opacity:0}
+#brows{transition:transform .3s}
+#character[data-state=grab] #eyes,#character[data-state=grab] #mO{opacity:0}
+#character[data-state=grab] #scaredEyes,#character[data-state=grab] #mScared,#character[data-state=grab] #sweat{opacity:1}
+#character[data-state=grab] #brows{transform:translateY(-7px)}
+#character[data-state=grab] #head{animation:tremble .1s linear infinite alternate}
+#character[data-state=grab] #armL{animation:flailL .24s ease-in-out infinite alternate}
+#character[data-state=grab] #armR{animation:flailR .24s ease-in-out .12s infinite alternate}
+#character[data-state=grab] #bodyAll{animation:wriggle .3s ease-in-out infinite alternate}
+#character[data-state=grab] #legL{animation:dangleL .25s ease-in-out infinite alternate}
+#character[data-state=grab] #legR{animation:dangleR .25s ease-in-out infinite alternate}
+@keyframes tremble{0%{transform:translateX(-2px) rotate(-2.5deg)}100%{transform:translateX(2px) rotate(2.5deg)}}
+@keyframes flailL{0%{transform:rotate(146deg)}100%{transform:rotate(182deg)}}
+@keyframes flailR{0%{transform:rotate(-146deg)}100%{transform:rotate(-182deg)}}
+@keyframes wriggle{0%{transform:translateY(-14px) rotate(-3deg)}100%{transform:translateY(-19px) rotate(3deg)}}
+.drop{animation:drip 1s ease-in infinite}
+#sweat g:nth-child(2) .drop{animation-delay:.35s}#sweat g:nth-child(3) .drop{animation-delay:.7s}
+@keyframes drip{0%{opacity:0;transform:translateY(-6px)}20%{opacity:1}100%{opacity:0;transform:translateY(26px)}}
+
+/* --- romántico mejorado --- */
+.cheek{transform-box:fill-box;transform-origin:center;transition:opacity .25s,transform .3s}
+#character:is([data-state=blush],[data-state=kiss]) .cheek{opacity:.9;transform:scale(1.3)}
+#character:is([data-state=blush],[data-state=kiss]) #hatch,#character:is([data-state=blush],[data-state=kiss]) #love{opacity:1}
+#character[data-state=blush] #bodyAll{animation:shy 1.3s ease-in-out infinite alternate}
+#character[data-state=blush] #armL{animation:fidgetL .45s ease-in-out infinite alternate}
+#character[data-state=blush] #armR{animation:fidgetR .45s ease-in-out infinite alternate}
+#character[data-state=blush] #legL{transform:rotate(7deg)}
+#character[data-state=kiss] #legR{animation:footPop 1.1s ease-in-out 1}
+#character[data-state=kiss] #mKiss{transform-box:fill-box;transform-origin:center;animation:pucker .35s ease-in-out 3 alternate}
+#character[data-state=kiss] #head{animation:kissTilt 1.1s ease-in-out 1}
+.heart{transform-box:fill-box;transform-origin:center;animation:riseHeart 1.8s ease-out infinite}
+#love g:nth-child(2) .heart{animation-delay:.6s}#love g:nth-child(3) .heart{animation-delay:1.2s}
+@keyframes shy{0%{transform:rotate(-2.5deg) translateX(-2px)}100%{transform:rotate(2.5deg) translateX(2px)}}
+@keyframes fidgetL{0%{transform:rotate(-46deg)}100%{transform:rotate(-30deg)}}
+@keyframes fidgetR{0%{transform:rotate(30deg)}100%{transform:rotate(46deg)}}
+@keyframes footPop{0%,100%{transform:rotate(0)}35%,70%{transform:rotate(-24deg) translateY(-6px)}}
+@keyframes pucker{0%{transform:scale(1)}100%{transform:scale(1.5)}}
+@keyframes kissTilt{0%{transform:rotate(0)}30%{transform:rotate(-6deg) translateY(-3px)}70%{transform:rotate(6deg)}100%{transform:rotate(5deg)}}
+@keyframes riseHeart{0%{opacity:0;transform:translateY(10px) scale(.5)}30%{opacity:1}100%{opacity:0;transform:translateY(-30px) scale(1.1)}}
+/* --- saltar --- */
+#character[data-state=jump] #mSmile{opacity:1}
+#character[data-state=jump] #mNeutral{opacity:0}
+#character[data-state=jump] #bodyAll{transform-origin:150px 412px;animation:jump .72s ease-in-out 3}
+#character[data-state=jump] #armL{animation:jumpArmL .72s ease-in-out 3}
+#character[data-state=jump] #armR{animation:jumpArmR .72s ease-in-out 3}
+#character[data-state=jump] #legL{animation:jumpLegL .72s ease-in-out 3}
+#character[data-state=jump] #legR{animation:jumpLegR .72s ease-in-out 3}
+@keyframes jump{0%{transform:translateY(0) scale(1.06,.9)}25%{transform:translateY(-6px) scale(.96,1.07)}50%{transform:translateY(-52px) scale(.98,1.04)}75%{transform:translateY(-6px) scale(.97,1.05)}90%{transform:translateY(0) scale(1.06,.9)}100%{transform:translateY(0) scale(1)}}
+@keyframes jumpArmL{0%{transform:rotate(0)}25%{transform:rotate(20deg)}50%{transform:rotate(150deg)}90%{transform:rotate(10deg)}100%{transform:rotate(0)}}
+@keyframes jumpArmR{0%{transform:rotate(0)}25%{transform:rotate(-20deg)}50%{transform:rotate(-150deg)}90%{transform:rotate(-10deg)}100%{transform:rotate(0)}}
+@keyframes jumpLegL{0%,100%{transform:rotate(0)}50%{transform:rotate(14deg) translateY(-8px)}}
+@keyframes jumpLegR{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg) translateY(-8px)}}
+
+/* --- mirar el movil --- */
+#phone{opacity:0}
+.pupil{transition:transform .3s}
+.bar{animation:bar 1.2s ease-in-out infinite}
+@keyframes bar{0%,100%{opacity:.35}50%{opacity:1}}
+#character[data-state=phone] #phone{opacity:1}
+#character[data-state=phone] #armL{transform:rotate(-34deg)}
+#character[data-state=phone] #armR{transform:rotate(34deg)}
+#character[data-state=phone] #head{transform:rotate(-3deg) translateY(7px)}
+#character[data-state=phone] .pupil{animation:readP 2.4s ease-in-out infinite}
+#character[data-state=phone] #bodyAll{animation:phoneBob 3s ease-in-out infinite}
+@keyframes readP{0%,100%{transform:translate(-3px,6px)}50%{transform:translate(3px,6px)}}
+@keyframes phoneBob{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+
+/* ===== globo de texto estilo comic ===== */
+#bubble{position:absolute;left:50%;top:-9%;transform:translateX(-50%) scale(0);transform-origin:50% 100%;max-width:92%;width:max-content;padding:8px 16px;background:#fff;color:#1a1a1a;border:4px solid #242424;border-radius:20px;box-shadow:4px 4px 0 #242424;font:400 22px/1.15 'Bangers','Comic Sans MS','Comic Neue',cursive;letter-spacing:1px;text-align:center;pointer-events:none;opacity:0;z-index:5}
+#bubble::before{content:"";position:absolute;left:50%;bottom:-22px;margin-left:-11px;border:11px solid transparent;border-top-color:#242424;border-bottom:0}
+#bubble::after{content:"";position:absolute;left:50%;bottom:-14px;margin-left:-7px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
+#bubble.show{opacity:1;animation:bpop .3s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes bpop{0%{transform:translateX(-50%) scale(.2) rotate(-6deg)}100%{transform:translateX(-50%) scale(1) rotate(0)}}
+
+/* ===== caras nuevas ===== */
+#mYawn,#dizzyEyes,#stars,#backHead,#laptop,#laptopScreen,#watch,#fly{opacity:0}
+#backHead{transition:opacity .18s}
+#character:is([data-state=stretch],[data-state=dizzy],[data-state=drop],[data-state=dance],[data-state=pat]) #mNeutral{opacity:0}
+#character:is([data-state=dance],[data-state=pat]) #mSmile{opacity:1}
+#character:is([data-state=dizzy],[data-state=drop]) #mO{opacity:1}
+#character[data-state=stretch] #mYawn{opacity:1}
+#character:is([data-state=stretch],[data-state=pat],[data-state=dizzy]) #eyes{opacity:0}
+#character[data-state=stretch] #sleepEyes{opacity:1}
+#character[data-state=pat] #happyEyes{opacity:1}
+#character[data-state=dizzy] #dizzyEyes,#character[data-state=dizzy] #stars{opacity:1}
+#character[data-state=annoyed] #backHead{opacity:1}
+#character[data-state=annoyed] #eyes,#character[data-state=annoyed] #brows,#character[data-state=annoyed] #mNeutral,#character[data-state=annoyed] #eyelids,#character[data-state=annoyed] .cheek{opacity:0}
+
+/* ===== estirarse y bostezar ===== */
+#character[data-state=stretch] #armL{animation:stArmL 3.8s ease-in-out 1}
+#character[data-state=stretch] #armR{animation:stArmR 3.8s ease-in-out 1}
+#character[data-state=stretch] #bodyAll{animation:stBody 3.8s ease-in-out 1}
+#character[data-state=stretch] #head{animation:stHead 3.8s ease-in-out 1}
+@keyframes stArmL{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(172deg)}}
+@keyframes stArmR{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(-172deg)}}
+@keyframes stBody{0%,100%{transform:scale(1)}20%,80%{transform:translateY(-8px) scale(.96,1.07)}}
+@keyframes stHead{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(-9deg) translateY(-3px)}}
+
+/* ===== bailar ===== */
+#character[data-state=dance] #bodyAll{animation:dBody .6s ease-in-out 10}
+#character[data-state=dance] #head{animation:dHead .6s ease-in-out 10}
+#character[data-state=dance] #armL{animation:dArmL .6s ease-in-out 10}
+#character[data-state=dance] #armR{animation:dArmR .6s ease-in-out 10}
+#character[data-state=dance] #legL{animation:stepA .6s ease-in-out 10}
+#character[data-state=dance] #legR{animation:stepB .6s ease-in-out .3s 10}
+@keyframes dBody{0%{transform:rotate(-5deg) translateY(0)}25%{transform:rotate(0) translateY(-8px)}50%{transform:rotate(5deg) translateY(0)}75%{transform:rotate(0) translateY(-8px)}100%{transform:rotate(-5deg) translateY(0)}}
+@keyframes dHead{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes dArmL{0%,100%{transform:rotate(150deg)}50%{transform:rotate(20deg)}}
+@keyframes dArmR{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(-150deg)}}
+
+/* ===== programar (sentado con laptop) ===== */
+#character[data-state=program] #laptop,#character[data-state=program] #laptopScreen{opacity:1}
+#character[data-state=program] #bodyAll{transform:translateY(22px)}
+#character[data-state=program] #legL{transform:rotate(-30deg)}
+#character[data-state=program] #legR{transform:rotate(30deg)}
+#character[data-state=program] #head{transform:translateY(5px) rotate(2deg)}
+#character[data-state=program] #armL{animation:typeL .16s ease-in-out infinite alternate}
+#character[data-state=program] #armR{animation:typeR .16s ease-in-out .08s infinite alternate}
+#character[data-state=program] .pupil{animation:readP 1.6s ease-in-out infinite}
+@keyframes typeL{0%{transform:rotate(-38deg)}100%{transform:rotate(-31deg)}}
+@keyframes typeR{0%{transform:rotate(31deg)}100%{transform:rotate(38deg)}}
+
+/* ===== mirar el reloj ===== */
+#character[data-state=watch] #watch{opacity:1}
+#character[data-state=watch] #armL{transform:rotate(-100deg)}
+#character[data-state=watch] #armR{transform:rotate(24deg)}
+#character[data-state=watch] #head{transform:rotate(6deg)}
+#character[data-state=watch] .pupil{animation:watchEyes 5.2s ease-in-out 1}
+#character[data-state=watch] #legR{animation:tapFoot .4s ease-in-out infinite alternate}
+@keyframes watchEyes{0%,55%{transform:translate(-5px,6px)}65%,100%{transform:translate(0,0)}}
+@keyframes tapFoot{0%{transform:rotate(0)}100%{transform:rotate(-14deg) translateY(-4px)}}
+
+/* ===== perseguir la mosca ===== */
+.wing{transform-box:fill-box;transform-origin:center;animation:buzz .07s linear infinite alternate}
+@keyframes buzz{0%{transform:scaleY(1)}100%{transform:scaleY(.3)}}
+#character[data-state=fly] #fly{animation:flyPath 5.2s linear 1}
+#character[data-state=fly] .pupil{animation:flyEyes 5.2s ease-in-out 1}
+#character[data-state=fly] #head{animation:flyHead 5.2s ease-in-out 1}
+#character[data-state=fly] #armR{animation:swat 5.2s ease-in-out 1}
+@keyframes flyPath{0%{opacity:1;transform:translate(40px,130px)}14%{transform:translate(250px,112px)}28%{transform:translate(228px,48px)}42%{transform:translate(72px,58px)}56%{transform:translate(150px,150px)}66%{transform:translate(226px,176px)}74%{transform:translate(222px,184px)}78%{transform:translate(262px,120px)}90%{opacity:1;transform:translate(120px,40px)}100%{opacity:0;transform:translate(330px,10px)}}
+@keyframes flyEyes{0%{transform:translate(-4px,-1px)}14%{transform:translate(4px,-2px)}28%{transform:translate(3px,-5px)}42%{transform:translate(-4px,-4px)}56%{transform:translate(0,2px)}66%{transform:translate(5px,1px)}74%{transform:translate(5px,3px)}78%{transform:translate(5px,-3px)}90%{transform:translate(-2px,-5px)}100%{transform:translate(0,0)}}
+@keyframes flyHead{0%{transform:rotate(-4deg)}14%{transform:rotate(5deg)}28%{transform:rotate(4deg)}42%{transform:rotate(-5deg)}56%{transform:rotate(0)}66%{transform:rotate(5deg)}78%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+@keyframes swat{0%,68%{transform:rotate(0)}72%{transform:rotate(-150deg)}76%{transform:rotate(-120deg)}80%{transform:rotate(-150deg)}86%,100%{transform:rotate(0)}}
+
+/* ===== acariciar la cabeza ===== */
+#character[data-state=pat] #head{transform:translateY(9px) scaleY(.94)}
+
+/* ===== mareado (arrastrado rapido) ===== */
+.spiral{transform-box:fill-box;transform-origin:center;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#character[data-state=dizzy] #stars{transform-origin:150px 55px;animation:spin 1.4s linear infinite}
+#character[data-state=dizzy] #bodyAll{animation:dzBody .9s ease-in-out infinite alternate}
+#character[data-state=dizzy] #head{animation:dzHead .7s ease-in-out infinite alternate}
+#character[data-state=dizzy] #armL{animation:dzArmL .5s ease-in-out infinite alternate}
+#character[data-state=dizzy] #armR{animation:dzArmR .5s ease-in-out infinite alternate}
+@keyframes dzBody{0%{transform:rotate(-9deg) translateX(-6px)}100%{transform:rotate(9deg) translateX(6px)}}
+@keyframes dzHead{0%{transform:rotate(-10deg)}100%{transform:rotate(10deg)}}
+@keyframes dzArmL{0%{transform:rotate(18deg)}100%{transform:rotate(-6deg)}}
+@keyframes dzArmR{0%{transform:rotate(6deg)}100%{transform:rotate(-18deg)}}
+
+/* ===== caida con rebote (al soltarlo) ===== */
+#character[data-state=drop] #bodyAll{transform-origin:150px 412px;animation:dropIn .9s cubic-bezier(.3,0,.7,1) 1}
+#character[data-state=drop] #armL{animation:dropArmL .9s ease-out 1}
+#character[data-state=drop] #armR{animation:dropArmR .9s ease-out 1}
+@keyframes dropIn{0%{transform:translateY(-70px)}38%{transform:translateY(0) scale(1.18,.78)}52%{transform:translateY(-16px) scale(.94,1.08)}68%{transform:translateY(0) scale(1.1,.88)}82%{transform:translateY(-4px) scale(.99,1.02)}100%{transform:translateY(0) scale(1)}}
+@keyframes dropArmL{0%{transform:rotate(168deg)}40%{transform:rotate(30deg)}100%{transform:rotate(0)}}
+@keyframes dropArmR{0%{transform:rotate(-168deg)}40%{transform:rotate(-30deg)}100%{transform:rotate(0)}}
+
+/* ===== harto (muchos toques): se cruza de brazos y se voltea ===== */
+#character[data-state=annoyed] #armL{transform:rotate(10deg)}
+#character[data-state=annoyed] #armR{transform:rotate(-10deg)}
+#character[data-state=annoyed] #legL,#character[data-state=annoyed] #legR{transform:rotate(0)}
+#character[data-state=annoyed] #head{animation:turnAway .5s ease-in-out 1}
+#character[data-state=annoyed] #bodyAll{animation:huff 1s ease-in-out infinite alternate}
+#character[data-state=annoyed] #legR{animation:tapFoot .35s ease-in-out infinite alternate}
+@keyframes turnAway{0%{transform:scaleX(1)}45%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes huff{0%{transform:translateY(0)}100%{transform:translateY(-3px)}}
+
+.fx2{position:absolute;font-size:26px;pointer-events:none;opacity:0;animation:kissFly 1.2s ease-out forwards}
+@keyframes kissFly{0%{opacity:0;transform:translate(0,0) scale(.4) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translate(120px,-80px) scale(1.4) rotate(25deg)}}
+
+.fx{position:absolute;font-size:22px;pointer-events:none;opacity:0;animation:fly 1.2s ease-out forwards}
+@keyframes fly{0%{opacity:0;transform:translateY(0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translateY(-100px) scale(1.2)}}
+
+/* ===== NUEVO: jugar, triste, foto, ánimo, zonas ===== */
+#ball,#photo,#mSad,#mMeh,#tear{opacity:0}
+#photoImg{display:none} /* se muestra solo si foto.jpg existe */
+/* triste (al despertar tras dormir mucho) */
+#character[data-state=sad] #mNeutral,#character[data-state=sad] #mMeh{opacity:0}
+#character[data-state=sad] #mSad{opacity:1}
+#character[data-state=sad] #eyes{opacity:0}#character[data-state=sad] #sleepEyes{opacity:1}
+#character[data-state=sad] #tear{opacity:1}
+#character[data-state=sad] #brows{transform:translateY(3px)}
+#character[data-state=sad] #head{transform:rotate(5deg) translateY(5px)}
+#character[data-state=sad] #armL{transform:rotate(14deg)}#character[data-state=sad] #armR{transform:rotate(-14deg)}
+#character[data-state=sad] #bodyAll{animation:sigh 2.6s ease-in-out infinite}
+@keyframes sigh{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+#tear{transform-box:fill-box;transform-origin:center}
+#character[data-state=sad] #tear{animation:tearDrop 2.8s ease-in infinite}
+@keyframes tearDrop{0%{opacity:0;transform:translateY(-2px)}20%{opacity:1}100%{opacity:0;transform:translateY(26px)}}
+/* jugar: le da a la pelota con el pie, con desgano y boca triste */
+#character[data-state=play] #mNeutral,#character[data-state=play] #mSmile{opacity:0}
+#character[data-state=play] #mMeh{opacity:1}
+#character[data-state=play] #head{transform:rotate(4deg) translateY(4px)}
+#character[data-state=play] #armL{transform:rotate(9deg)}
+#character[data-state=play] #armR{transform:rotate(-9deg)}
+#character[data-state=play] #bodyAll{animation:boredSway 2.4s ease-in-out infinite}
+#character[data-state=play] #legR{animation:kick 2.4s ease-in-out infinite}
+@keyframes boredSway{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(1px) rotate(1deg)}}
+@keyframes kick{0%,52%,100%{transform:rotate(0)}62%{transform:rotate(-30deg)}72%{transform:rotate(-5deg)}}
+#character[data-state=play] #ball{opacity:1;animation:ballKick 2.4s ease-in-out infinite}
+@keyframes ballKick{0%,52%{transform:translate(176px,399px)}62%{transform:translate(214px,379px)}74%{transform:translate(258px,399px)}100%{transform:translate(176px,399px)}}
+/* foto: mira una foto vuestra */
+#character[data-state=photo] #photo{opacity:1}
+#character[data-state=photo] #armL{transform:rotate(-52deg)}
+#character[data-state=photo] #armR{transform:rotate(52deg)}
+#character[data-state=photo] #head{transform:rotate(2deg) translateY(7px)}
+#character[data-state=photo] #love{opacity:1}
+#character[data-state=photo] #mSmile{opacity:1}#character[data-state=photo] #mNeutral{opacity:0}
+#character[data-state=photo] #eyes{opacity:0}#character[data-state=photo] #happyEyes{opacity:1}
+/* ánimo bajo (sutil, en reposo) */
+#character[data-mood=low][data-state=idle] #mNeutral{opacity:0}
+#character[data-mood=low][data-state=idle] #mMeh{opacity:1}
+#character[data-mood=low][data-state=idle] #brows{transform:translateY(2px)}
+</style>
+</head>
+<body>
+<div id="stage">
+<svg viewBox="0 0 300 420" id="character" data-state="idle" data-pose="stand">
+  <defs>
+    <radialGradient id="gFace" cx="40%" cy="34%" r="72%">
+      <stop offset="52%" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#b07a50" stop-opacity="0.42"/>
+    </radialGradient>
+    <linearGradient id="gShirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="48%" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#2d4a63" stop-opacity="0.26"/>
+    </linearGradient>
+    <radialGradient id="gHair" cx="38%" cy="18%" r="85%">
+      <stop offset="36%" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.16"/>
+    </radialGradient>
+    <radialGradient id="gLimb" cx="38%" cy="35%" r="75%">
+      <stop offset="50%" stop-color="#fff" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#2d4a63" stop-opacity="0.22"/>
+    </radialGradient>
+    <clipPath id="photoClip"><rect x="117" y="255" width="66" height="40" rx="3"/></clipPath>
+  </defs>
+  <ellipse cx="150" cy="412" rx="72" ry="10" fill="#000" opacity="0.12"/>
+  <g id="float"><g id="bodyAll">
+
+    <!-- piernas -->
+    <g id="legL"><path d="M130,316 L128,398" stroke="#242424" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M130,316 L128,398" stroke="#3b4a66" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M98,396 Q90,415 118,415 L146,415 Q151,398 134,393 Z" fill="#f4f4f4" stroke="#242424" stroke-width="4" stroke-linejoin="round"/></g>
+    <g id="legR"><path d="M170,316 L172,398" stroke="#242424" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M170,316 L172,398" stroke="#3b4a66" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M202,396 Q210,415 182,415 L154,415 Q149,398 166,393 Z" fill="#f4f4f4" stroke="#242424" stroke-width="4" stroke-linejoin="round"/></g>
+
+    <!-- torso -->
+    <path d="M108,232 Q150,220 192,232 L198,318 Q150,334 102,318 Z" fill="var(--shirt)" stroke="#242424" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M108,232 Q150,220 192,232 L198,318 Q150,334 102,318 Z" fill="url(#gShirt)"/>
+
+    <path d="M132,222 Q150,246 168,222 L166,205 L134,205 Z" fill="var(--skin)" stroke="#242424" stroke-width="3" stroke-linejoin="round"/>
+
+    <!-- cabeza -->
+    <g id="head"><g transform="translate(150 238) scale(1.25) translate(-150 -238)">
+      <path d="M78,170 Q67,168 68,181 Q70,193 82,190 Z" fill="var(--skin)" stroke="#242424" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M74,174 Q72,181 78,185" stroke="#d9a883" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M222,170 Q233,168 232,181 Q230,193 218,190 Z" fill="var(--skin)" stroke="#242424" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M226,174 Q228,181 222,185" stroke="#d9a883" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M72,150 Q72,80 150,80 Q228,80 228,150 Q228,226 150,242 Q72,226 72,150 Z" fill="var(--skin)" stroke="#242424" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M72,150 Q72,80 150,80 Q228,80 228,150 Q228,226 150,242 Q72,226 72,150 Z" fill="url(#gFace)"/>
+      <ellipse class="cheek" cx="108" cy="192" rx="16" ry="10" fill="var(--blush)"/>
+      <ellipse class="cheek" cx="192" cy="192" rx="16" ry="10" fill="var(--blush)"/>
+      <g id="brows"><path d="M101,137 Q118,131 135,135" stroke="#5a4130" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M165,135 Q182,131 199,137" stroke="#5a4130" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+
+      <g id="eyes"><ellipse cx="118" cy="166" rx="15.5" ry="17.5" fill="#fff" stroke="#242424" stroke-width="4"/><ellipse cx="182" cy="166" rx="15.5" ry="17.5" fill="#fff" stroke="#242424" stroke-width="4"/><g class="pupil"><circle cx="119" cy="168" r="7.5" fill="#2b1c12"/><circle cx="122" cy="164" r="2.8" fill="#fff"/><circle cx="116" cy="172" r="1.6" fill="#fff"/></g><g class="pupil"><circle cx="181" cy="168" r="7.5" fill="#2b1c12"/><circle cx="184" cy="164" r="2.8" fill="#fff"/><circle cx="178" cy="172" r="1.6" fill="#fff"/></g></g>
+      <g id="eyelids"><rect x="96" y="142" width="44" height="48" fill="var(--skin)"/><rect x="160" y="142" width="44" height="48" fill="var(--skin)"/></g>
+      <g id="scaredEyes"><ellipse cx="118" cy="166" rx="19" ry="22" fill="#fff" stroke="#242424" stroke-width="4"/><circle cx="118" cy="166" r="3.5" fill="#2b1c12"/><ellipse cx="182" cy="166" rx="19" ry="22" fill="#fff" stroke="#242424" stroke-width="4"/><circle cx="182" cy="166" r="3.5" fill="#2b1c12"/></g>
+      <ellipse id="mYawn" cx="150" cy="218" rx="14" ry="17" fill="#8a2f3a" stroke="#242424" stroke-width="4"/>
+      <g id="dizzyEyes"><ellipse cx="118" cy="167" rx="17" ry="19" fill="#fff" stroke="#242424" stroke-width="4"/><g transform="translate(118 167)"><path class="spiral" d="M1.2,0.0 L1.3,0.5 L1.3,1.1 L0.9,1.6 L0.4,2.1 L-0.4,2.3 L-1.3,2.2 L-2.2,1.8 L-2.9,1.0 L-3.3,-0.0 L-3.3,-1.2 L-2.9,-2.5 L-2.0,-3.5 L-0.7,-4.2 L0.8,-4.4 L2.4,-4.0 L3.8,-3.1 L4.9,-1.7 L5.4,0.1 L5.3,2.0 L4.4,3.9 L3.0,5.4 L1.0,6.3 L-1.3,6.5 L-3.5,5.8 L-5.5,4.4 L-6.9,2.3 L-7.5,-0.2 L-7.2,-2.8 L-6.0,-5.3 L-3.9,-7.2 L-1.2,-8.4 L1.8,-8.5 L4.7,-7.6 L7.2,-5.7 L8.9,-2.9 L9.6,0.3 L9.1,3.7 L7.5,6.8 L4.8,9.1 L1.4,10.5 L-2.3,10.5 L-5.9,9.3 L-8.9,6.9 L-11.0,3.5 L-11.7,-0.5 L-11.1,-4.6 L-9.0,-8.2 L-5.7,-11.0 L-1.6,-12.6 L2.8,-12.6 L7.1,-11.0 L10.6,-8.1 L13.0,-4.0 L13.8,0.7 L13.0,5.5 L10.5,9.8 L6.6,13.0" fill="none" stroke="#242424" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="182" cy="167" rx="17" ry="19" fill="#fff" stroke="#242424" stroke-width="4"/><g transform="translate(182 167)"><path class="spiral" d="M1.2,0.0 L1.3,0.5 L1.3,1.1 L0.9,1.6 L0.4,2.1 L-0.4,2.3 L-1.3,2.2 L-2.2,1.8 L-2.9,1.0 L-3.3,-0.0 L-3.3,-1.2 L-2.9,-2.5 L-2.0,-3.5 L-0.7,-4.2 L0.8,-4.4 L2.4,-4.0 L3.8,-3.1 L4.9,-1.7 L5.4,0.1 L5.3,2.0 L4.4,3.9 L3.0,5.4 L1.0,6.3 L-1.3,6.5 L-3.5,5.8 L-5.5,4.4 L-6.9,2.3 L-7.5,-0.2 L-7.2,-2.8 L-6.0,-5.3 L-3.9,-7.2 L-1.2,-8.4 L1.8,-8.5 L4.7,-7.6 L7.2,-5.7 L8.9,-2.9 L9.6,0.3 L9.1,3.7 L7.5,6.8 L4.8,9.1 L1.4,10.5 L-2.3,10.5 L-5.9,9.3 L-8.9,6.9 L-11.0,3.5 L-11.7,-0.5 L-11.1,-4.6 L-9.0,-8.2 L-5.7,-11.0 L-1.6,-12.6 L2.8,-12.6 L7.1,-11.0 L10.6,-8.1 L13.0,-4.0 L13.8,0.7 L13.0,5.5 L10.5,9.8 L6.6,13.0" fill="none" stroke="#242424" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+      <path id="mScared" d="M132,214 L138,208 L144,214 L150,208 L156,214 L162,208 L168,214 Q150,238 132,214 Z" fill="#8a2f3a" stroke="#242424" stroke-width="3.5" stroke-linejoin="round"/>
+      <g id="hatch" stroke="#e8637d" stroke-width="2.5" stroke-linecap="round"><path d="M96,192 l4,-9 M105,194 l4,-9 M114,194 l4,-9 M182,194 l4,-9 M191,194 l4,-9 M200,192 l4,-9"/></g>
+      <g id="happyEyes" fill="none" stroke="#242424" stroke-width="4" stroke-linecap="round">
+        <path d="M102,174 Q118,154 134,174"/><path d="M166,174 Q182,154 198,174"/></g>
+      <g id="sleepEyes" fill="none" stroke="#242424" stroke-width="4" stroke-linecap="round">
+        <path d="M102,164 Q118,178 134,164"/><path d="M166,164 Q182,178 198,164"/></g>
+
+      <ellipse cx="150" cy="191" rx="5" ry="4.5" fill="#e3b696"/>
+      <path id="mNeutral" d="M139,213 Q150,217 161,213" stroke="#b5654a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path id="mSmile" d="M134,211 Q150,225 166,211" stroke="#b5654a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <ellipse id="mO" cx="150" cy="217" rx="6" ry="7" fill="#8a2f3a" stroke="#242424" stroke-width="3"/>
+      <g id="mLaugh"><path d="M129,207 Q150,242 171,207 Z" fill="#8a2f3a" stroke="#242424" stroke-width="4" stroke-linejoin="round"/><path d="M140,224 Q150,216 160,224 Q150,232 140,224Z" fill="#e8837f"/></g>
+      <g fill="#9c8068" opacity=".55"><circle cx="126" cy="226" r="1.7"/><circle cx="136" cy="234" r="1.7"/><circle cx="150" cy="237" r="1.7"/><circle cx="164" cy="234" r="1.7"/><circle cx="174" cy="226" r="1.7"/><circle cx="142" cy="206" r="1.5"/><circle cx="158" cy="206" r="1.5"/></g>
+      <path id="mKiss" d="M143,216 Q150,207 157,216 Q150,225 143,216 Z" fill="#e07a8a" stroke="#b5654a" stroke-width="3" stroke-linejoin="round"/>
+      <path id="mSad" d="M136,219 Q150,209 164,219" stroke="#b5654a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path id="mMeh" d="M140,216 Q150,212 160,216" stroke="#b5654a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path id="tear" d="M114,182 Q120,190 114,197 Q108,190 114,182 Z" fill="#8fd3ff" stroke="#6bb8e8" stroke-width="1.6"/>
+
+      <path d="M74,168 Q58,86 150,76 Q242,86 226,168 L217,147 Q213,127 197,128 Q199,142 185,140 Q181,123 165,123 Q167,139 151,135 Q147,121 131,124 Q132,140 117,139 Q111,123 95,129 Q97,145 83,150 Z" fill="var(--hair)" stroke="#242424" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M74,168 Q58,86 150,76 Q242,86 226,168 L217,147 Q213,127 197,128 Q199,142 185,140 Q181,123 165,123 Q167,139 151,135 Q147,121 131,124 Q132,140 117,139 Q111,123 95,129 Q97,145 83,150 Z" fill="url(#gHair)"/>
+      <path d="M74,168 Q58,86 150,76 Q106,86 90,122 Q80,138 83,150 Z" fill="var(--hair-dark)" opacity="0.4"/>
+      <g stroke="var(--hair-dark)" stroke-width="2.4" fill="none" opacity=".5" stroke-linecap="round"><path d="M118,92 Q150,84 182,92"/><path d="M108,106 Q150,98 192,106"/></g>
+      <g id="backHead"><path d="M70,170 Q68,80 150,78 Q232,80 230,170 Q228,202 210,208 Q180,196 150,210 Q120,196 90,208 Q72,202 70,170 Z" fill="var(--hair)" stroke="#242424" stroke-width="4" stroke-linejoin="round"/><path d="M104,112 Q150,92 196,112 M96,140 Q150,118 204,140" stroke="var(--hair-dark)" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/></g>
+      <g id="sweat"><g transform="translate(80 158)"><path class="drop" d="M0,-9 Q7,2 0,7 Q-7,2 0,-9 Z" fill="#8fd3ff" stroke="#242424" stroke-width="2.5"/></g><g transform="translate(221 154)"><path class="drop" d="M0,-9 Q7,2 0,7 Q-7,2 0,-9 Z" fill="#8fd3ff" stroke="#242424" stroke-width="2.5"/></g><g transform="translate(204 128)"><path class="drop" d="M0,-9 Q7,2 0,7 Q-7,2 0,-9 Z" fill="#8fd3ff" stroke="#242424" stroke-width="2.5"/></g></g>
+    </g></g>
+
+    <!-- brazos (encima de todo para poder taparse la cara) -->
+    <g id="laptop"><path d="M96,298 L204,298 L212,311 L88,311 Z" fill="#6e7585" stroke="#242424" stroke-width="4" stroke-linejoin="round"/></g>
+    <g id="phone"><rect x="128" y="252" width="44" height="60" rx="9" fill="#3a3f4b" stroke="#242424" stroke-width="4"/><rect x="133" y="257" width="34" height="50" rx="6" fill="none" stroke="#2b2f3a" stroke-width="2"/><rect x="134" y="258" width="16" height="16" rx="4" fill="#23262f" stroke="#242424" stroke-width="2"/><circle cx="139" cy="263" r="2.9" fill="#0f1116" stroke="#565c6a" stroke-width="1.2"/><circle cx="145" cy="269" r="2.9" fill="#0f1116" stroke="#565c6a" stroke-width="1.2"/><circle cx="140" cy="279" r="1.5" fill="#ffe08a"/></g>
+    <g id="armL"><path d="M104,246 Q86,268 92,302" stroke="#242424" stroke-width="18" stroke-linecap="round" fill="none"/><path d="M104,246 Q86,268 92,302" stroke="var(--shirt)" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="92" cy="305" r="14" fill="#fff" stroke="#242424" stroke-width="4"/><g id="watch"><rect x="80" y="283" width="24" height="11" rx="4" fill="#2b2f3a" stroke="#242424" stroke-width="3"/><circle cx="92" cy="288.5" r="3.6" fill="#fff"/></g></g>
+    <g id="armR"><path d="M196,246 Q214,268 208,302" stroke="#242424" stroke-width="18" stroke-linecap="round" fill="none"/><path d="M196,246 Q214,268 208,302" stroke="var(--shirt)" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="208" cy="305" r="14" fill="#fff" stroke="#242424" stroke-width="4"/></g>
+    <g id="laptopScreen"><rect x="106" y="242" width="88" height="56" rx="7" fill="#8c93a3" stroke="#242424" stroke-width="4"/><rect x="113" y="248" width="74" height="44" rx="3" fill="#aeb6c6"/><path d="M120,258 h48 M120,268 h40 M120,278 h30" stroke="#8c93a3" stroke-width="2.4" stroke-linecap="round"/></g>
+    <g id="photo"><rect x="110" y="248" width="80" height="62" rx="7" fill="#fbfbfb" stroke="#242424" stroke-width="4"/><g id="photoPh"><rect x="117" y="255" width="66" height="40" rx="3" fill="#ffe3ec"/><path d="M150,281 C141,271 130,278 150,294 C170,278 159,271 150,281 Z" fill="#ff5c8a" stroke="#242424" stroke-width="2"/></g><image id="photoImg" href="foto.jpg" x="117" y="255" width="66" height="40" preserveAspectRatio="xMidYMid slice" clip-path="url(#photoClip)"/><rect x="117" y="298" width="66" height="9" rx="2" fill="#eef0f3"/></g>
+  </g></g>
+  <g id="fly"><ellipse cx="0" cy="0" rx="5" ry="3.5" fill="#242424"/><ellipse class="wing" cx="-2" cy="-4" rx="4.5" ry="2.5" fill="#cfe8ff" stroke="#242424" stroke-width="1.5"/><ellipse class="wing" cx="3" cy="-4" rx="4.5" ry="2.5" fill="#cfe8ff" stroke="#242424" stroke-width="1.5"/></g>
+  <g id="ball"><circle cx="0" cy="0" r="15" fill="#ff7a59" stroke="#242424" stroke-width="2.8"/><path d="M-9,-6 Q0,-12 9,-6" stroke="#fff" stroke-width="2.4" fill="none" opacity=".55" stroke-linecap="round"/><path d="M-13,2 Q0,8 13,2" stroke="#d94f30" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/></g>
+  <g id="stars"><g transform="translate(150 -8)"><path d="M0,-11 L3.2,-3.4 L11,-3.4 L4.8,1.6 L7,9.6 L0,5 L-7,9.6 L-4.8,1.6 L-11,-3.4 L-3.2,-3.4 Z" fill="#ffd34d" stroke="#242424" stroke-width="2" stroke-linejoin="round"/></g><g transform="translate(95 86)"><path d="M0,-11 L3.2,-3.4 L11,-3.4 L4.8,1.6 L7,9.6 L0,5 L-7,9.6 L-4.8,1.6 L-11,-3.4 L-3.2,-3.4 Z" fill="#ffd34d" stroke="#242424" stroke-width="2" stroke-linejoin="round"/></g><g transform="translate(205 86)"><path d="M0,-11 L3.2,-3.4 L11,-3.4 L4.8,1.6 L7,9.6 L0,5 L-7,9.6 L-4.8,1.6 L-11,-3.4 L-3.2,-3.4 Z" fill="#ffd34d" stroke="#242424" stroke-width="2" stroke-linejoin="round"/></g></g>
+  <g id="love"><g transform="translate(56 92)"><path class="heart" d="M0,4 C-7,-5 -14,4 0,14 C14,4 7,-5 0,4Z" fill="#ff5c8a" stroke="#242424" stroke-width="2.5"/></g><g transform="translate(246 78)"><path class="heart" d="M0,4 C-7,-5 -14,4 0,14 C14,4 7,-5 0,4Z" fill="#ff5c8a" stroke="#242424" stroke-width="2.5"/></g><g transform="translate(150 18)"><path class="heart" d="M0,4 C-7,-5 -14,4 0,14 C14,4 7,-5 0,4Z" fill="#ff5c8a" stroke="#242424" stroke-width="2.5"/></g></g>
+  <g id="zzz"><text x="96" y="322">z</text><text x="96" y="322">Z</text><text x="96" y="322">z</text></g>
+</svg>
+<div id="bubble"></div>
+</div>
+<button id="menuBtn" title="Opciones">⋯</button>
+<div id="menu">
+  <button data-a="sleep">😴 Dormir</button>
+  <button data-a="mute">🔕 Silenciar frases</button>
+  <button class="danger" data-a="close">✕ Quitar</button>
+</div>
+
+<script>
+// ===== Ajusta aquí =====
+const MOSTRAR_MENU = false;   // true = botón ⋯ visible (solo para pruebas). Para quitarlo: notificación "Quitar" o la app
+const IDLE_MS = 15000;        // sin tocar → empieza a hacer cosas
+const SIT_AFTER_MS = 8000;    // pausa entre animaciones
+const SLEEP_AFTER_MS = 25000; // sentado sin tocar → se duerme
+const ANIVERSARIO = { mes: 11, dia: 7 }; // fecha del aniversario (mes 1-12)
+const FRASES = ['Te quiero 💙','¿Ya comiste?','No te olvides de tomar agua','Te extrañaba','Eres lo mejor de mi día','¿Cómo va tu día?'];
+const FRASES_ANIV = ['¡Feliz aniversario, mi amor! 💙','Gracias por estar conmigo','Este día es para ti 🌹'];
+// ===== Personaliza esto =====
+const INICIO_RELACION = { a: 2023, m: 11, d: 7 }; // primer día juntos (año, mes, día)
+const CUMPLE_ELLA = null;         // cumpleaños de ella, ej: { m: 3, d: 14 }  (null = sin usar)
+const HORA_BUENAS_NOCHES = 22;    // hora (0-23) del beso de buenas noches
+const NOMBRE = '';                // su nombre/apodo, ej: 'mi amor' (vacío = sin nombre)
+const FRASES_DIARIAS = ['Hoy también te quiero{n} 💙','Me alegras el día','Pienso en ti','Eres mi lugar favorito','Gracias por existir','Qué suerte tenerte','Te quiero más que ayer','Sonríe, te queda bonito'];
+const FRASES_BIEN = ['Toma agua 💧','Estira un poco 🙆','Descansa la vista 👀','¿Ya comiste?','Respira hondo 😌','Siéntate derechita 🪑'];
+
+const svg = document.getElementById('character');
+const stage = document.getElementById('stage');
+const bubble = document.getElementById('bubble');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const setPose = p => svg.dataset.pose = p;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const isAniv = () => { const d = new Date(); return d.getMonth() + 1 === ANIVERSARIO.mes && d.getDate() === ANIVERSARIO.dia; };
+
+// ===== Funciones (días juntos, cuenta regresiva, saludos, frase del día) =====
+const NM = NOMBRE ? ' ' + NOMBRE : '';
+const P = t => t.replace('{n}', NM);
+const DIA_MS = 86400000;
+function diasJuntos(){ const s = new Date(INICIO_RELACION.a, INICIO_RELACION.m - 1, INICIO_RELACION.d); return Math.max(0, Math.floor((Date.now() - s) / DIA_MS)); }
+function faltanPara(m, d){ const n = new Date(); const hoy = new Date(n.getFullYear(), n.getMonth(), n.getDate()); let f = new Date(n.getFullYear(), m - 1, d); if(f < hoy) f = new Date(n.getFullYear() + 1, m - 1, d); return Math.round((f - hoy) / DIA_MS); }
+function saludoHora(){ const h = new Date().getHours(); if(h < 6) return 'Shhh… a dormir 🌙'; if(h < 12) return P('Buenos días{n} ☀️'); if(h < 19) return 'Buenas tardes 🙂'; return 'Buenas noches 🌙'; }
+function fraseDelDia(){ const i = Math.floor(Date.now() / DIA_MS) % FRASES_DIARIAS.length; return P(FRASES_DIARIAS[i]); }
+function fraseIdle(){
+  const op = [ fraseDelDia, saludoHora, () => 'Llevamos ' + diasJuntos() + ' días juntos 💙' ];
+  const fa = faltanPara(ANIVERSARIO.mes, ANIVERSARIO.dia); if(fa > 0 && fa <= 30) op.push(() => 'Faltan ' + fa + ' días para nuestro aniversario 🌹');
+  if(CUMPLE_ELLA){ const fc = faltanPara(CUMPLE_ELLA.m, CUMPLE_ELLA.d); if(fc >= 0 && fc <= 30) op.push(() => fc === 0 ? '¡Feliz cumpleaños! 🎂' : 'Faltan ' + fc + ' para tu cumple 🎂'); }
+  return pick(op)();
+}
+
+// ===== Globos de texto =====
+let bubbleT, muted = false;
+try { muted = localStorage.getItem('chibiMute') === '1'; } catch(e){}
+function say(text, ms = 2000){
+  if(muted) return;
+  bubble.textContent = text;
+  bubble.classList.remove('show'); void bubble.offsetWidth; bubble.classList.add('show');
+  clearTimeout(bubbleT); bubbleT = setTimeout(() => bubble.classList.remove('show'), ms);
+}
+const sayPhrase = () => say(isAniv() ? pick(FRASES_ANIV) : fraseIdle(), 3400);
+const SAYS = { protect:'¡Oye!', laugh:'¡JA JA!', laughLoop:'¡JAJAJAJA!', blush:'¡Ay...!', kiss:'¡Muac!', grab:'¡SUÉLTAME!', dizzy:'¡Qué mareo...!', drop:'¡PUM!', annoyed:'¡Hmph!', pat:'¡Ehh~!',
+  fly:'¿Y esa mosca?', watch:'Tic... tac...', stretch:'Aaaahhh...', program:'</> tap tap', dance:'♪ Lalala ♪', jump:'¡Yujuu!', warm:'¡Uno, dos!', wave:'¡Hola!', play:'¡Hop, hop!' };
+function setState(s){
+  svg.dataset.state = s;
+  document.querySelectorAll('.pupil').forEach(p => p.style.transform = '');
+  if(SAYS[s]) say(SAYS[s], s === 'dizzy' ? 2600 : 1800);
+}
+
+// ===== Ánimo (se entristece si lo ignoran, feliz si lo cuidan) =====
+let careAt = Date.now();
+try { careAt = +localStorage.getItem('chibiCare') || careAt; } catch(e){}
+function care(){ careAt = Date.now(); try { localStorage.setItem('chibiCare', careAt); } catch(e){} }
+function updateMood(){ const h = (Date.now() - careAt) / 3600000; svg.dataset.mood = h > 8 ? 'low' : 'ok'; }
+updateMood();
+
+// ===== Ojos que siguen el dedo =====
+function eyeFollow(cx, cy){
+  if(svg.dataset.state !== 'idle' || svg.dataset.pose !== 'stand') return;
+  const r = svg.getBoundingClientRect(); if(!r.width) return;
+  let dx = (cx - (r.left + r.width / 2)) / (r.width / 2);
+  let dy = (cy - (r.top + r.height * 0.42)) / (r.height / 2);
+  dx = Math.max(-1, Math.min(1, dx)); dy = Math.max(-1, Math.min(1, dy));
+  document.querySelectorAll('#eyes .pupil').forEach(p => p.style.transform = `translate(${dx * 5}px, ${dy * 5}px)`);
+}
+
+// ===== Cadena de inactividad =====
+let token = 0;
+const SLEEP_LONG_MS = 60000; // dormido este rato -> despierta triste y se pone a jugar
+const ANIMS = { warm: 3900, wave: 2800, jump: 2300, phone: 6500, dance: 6000, program: 7500, watch: 5200, fly: 5200, play: 5500, photo: 4200 }; // nombre: duración (ms)
+async function idleChain(){
+  const my = ++token, alive = () => my === token;
+  updateMood();
+  await wait(IDLE_MS); if(!alive()) return;
+  const pool = Object.keys(ANIMS).sort(() => Math.random() - .5).slice(0, 2); // 2 al azar, sin repetir
+  for(const a of pool){
+    setState(a);
+    if(a === 'photo') say(pick(['Te quiero' + NM + ' 💙','Mi foto favorita','Qué recuerdos 🥹']), 3200);
+    await wait(ANIMS[a]); if(!alive()) return;
+    setState('idle'); updateMood(); if(Math.random() < .55) sayPhrase();
+    await wait(SIT_AFTER_MS); if(!alive()) return;
+  }
+  setState('stretch'); await wait(3800); if(!alive()) return; // bosteza antes de sentarse
+  setState('idle'); setPose('sit'); await wait(SLEEP_AFTER_MS); if(!alive()) return;
+  setPose('sleep'); await wait(SLEEP_LONG_MS); if(!alive()) return;
+  // despierta tras dormir mucho: algo triste y luego se pone a jugar solo
+  setPose('stand'); setState('sad'); say('¿Mmm… dónde estabas?', 2600); await wait(3400); if(!alive()) return;
+  setState('play'); say('Bueno… juego un rato 🙂', 2400); await wait(6000); if(!alive()) return;
+  setState('idle'); await wait(SIT_AFTER_MS); if(!alive()) return;
+  idleChain();
+}
+
+// ===== Efectos flotantes =====
+function fx(emoji, n, cls = 'fx'){
+  for(let i=0;i<n;i++) setTimeout(() => {
+    const d = document.createElement('div');
+    d.className = cls; d.textContent = emoji;
+    d.style.left = cls === 'fx2' ? '54%' : (45 + Math.random()*10) + '%';
+    d.style.top = cls === 'fx2' ? (46 + Math.random()*6) + '%' : (18 + Math.random()*8) + '%';
+    stage.appendChild(d); setTimeout(() => d.remove(), 1200);
+  }, i*140);
+}
+
+// ===== Toques =====
+let tapCount = 0, lastTap = 0, reactT, woke = false, burstRomantic = false;
+function firstToday(){
+  const today = new Date().toDateString();
+  try { if(localStorage.getItem('chibiDay') === today) return false; localStorage.setItem('chibiDay', today); } catch(e){ return false; }
+  return true;
+}
+function tap(zone){
+  const now = Date.now();
+  tapCount = (now - lastTap < 650) ? tapCount + 1 : 1; lastTap = now;
+  if(tapCount === 1) burstRomantic = Math.random() < 0.5; // alterna solo entre cariño y cosquillas
+  const first = firstToday();
+  clearTimeout(reactT);
+  care();
+  let s, hold = 1100, zoneSay = '';
+  const k = Math.min(tapCount, 3);
+  if(tapCount >= 10){ s = 'annoyed'; hold = 3800; }
+  else if(svg.dataset.state === 'annoyed'){ s = 'annoyed'; hold = 3800; }
+  else if(zone === 'head'){ s = 'pat'; hold = 1300; }
+  else if(zone === 'foot'){ s = 'jump'; hold = 1600; zoneSay = '¡Jaja, los pies no! 🤣'; }
+  else if(zone === 'belly'){ s = ['protect','laugh','laughLoop'][k-1]; if(k === 3) hold = 1400; } // cosquillas
+  else { // manos u otro -> cariño / cosquillas alterno
+    s = (burstRomantic ? ['blush','kiss','kiss'] : ['protect','laugh','laughLoop'])[k-1];
+    if(k === 3) hold = 1400;
+  }
+  if(s === 'kiss'){ setState('idle'); void svg.getBoundingClientRect(); }
+  if(s !== svg.dataset.state || s === 'kiss' || s === 'pat' || s === 'jump') setState(s);
+  if(zoneSay) say(zoneSay, 1800);
+  else if(first) say(isAniv() ? P('¡Feliz aniversario{n}! 💙') : P('Te extrañaba{n} 💙'), 3400);
+  else if(woke) say('¡Ah! ¿Me quedé dormido?', 2400);
+  reactT = setTimeout(() => { setState('idle'); tapCount = 0; idleChain(); }, hold);
+}
+
+// ===== Mantener presionado = agarrarlo, arrastrarlo (rápido = se marea) y soltarlo =====
+let down = false, grabbed = false, moved = false, zone = 'body', pressT, sx, sy, ox = 0, oy = 0, dx = 0, dy = 0, lx, ly, lt, dizzyMs = 0, vX = 0, vY = 0;
+function hitZone(e){
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if(!el || !el.closest) return 'body';
+  if(el.closest('#head')) return 'head';
+  if(el.closest('#armL') || el.closest('#armR')) return 'hand';
+  if(el.closest('#legL') || el.closest('#legR')) return 'foot';
+  return 'belly';
+}
+stage.addEventListener('pointerdown', e => {
+  down = true; grabbed = false; moved = false; dx = dy = 0; dizzyMs = 0; vX = vY = 0;
+  sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now();
+  woke = svg.dataset.pose === 'sleep'; zone = hitZone(e);
+  stage.setPointerCapture(e.pointerId);
+  token++; setPose('stand');
+  pressT = setTimeout(() => { grabbed = true; clearTimeout(reactT); setState('grab'); if(window.Android) Android.setDragging(true); }, 450);
+});
+stage.addEventListener('pointermove', e => {
+  if(!down) return;
+  const t = performance.now(), dt = Math.max(1, t - lt);
+  const speed = window.Android ? Android.getSpeed() : Math.hypot(e.clientX - lx, e.clientY - ly) / dt;
+  vX = (e.clientX - lx) / dt; vY = (e.clientY - ly) / dt;
+  lx = e.clientX; ly = e.clientY; lt = t;
+  dx = e.clientX - sx; dy = e.clientY - sy;
+  if(!grabbed && (Math.abs(dx) > 10 || Math.abs(dy) > 10)){ moved = true; clearTimeout(pressT); }
+  if(!grabbed) eyeFollow(e.clientX, e.clientY); // los ojos siguen el dedo
+  if(grabbed){
+    dizzyMs = speed > 1.1 ? dizzyMs + dt : Math.max(0, dizzyMs - dt / 2);
+    if(!window.Android) stage.style.transform = `translate(${ox + dx}px, ${oy + dy}px)`;
+  }
+});
+const release = () => {
+  if(!down) return; down = false; clearTimeout(pressT);
+  document.querySelectorAll('.pupil').forEach(p => p.style.transform = '');
+  if(grabbed){
+    ox += dx; oy += dy; grabbed = false; if(window.Android) Android.setDragging(false);
+    const dizzy = dizzyMs > 700;
+    setState(dizzy ? 'dizzy' : 'drop');
+    clearTimeout(reactT);
+    reactT = setTimeout(() => { setState('idle'); idleChain(); }, dizzy ? 3300 : 1100);
+    return;
+  }
+  if(moved){ // deslizar: si fue un flick rápido, lo "lanzas" y cae rebotando
+    const flick = Math.hypot(vX, vY);
+    if(flick > 0.85){ setState('idle'); void svg.getBoundingClientRect(); setState('drop'); say('¡Wooah!', 1400); clearTimeout(reactT); reactT = setTimeout(() => { setState('idle'); idleChain(); }, 1200); }
+    else { setState('idle'); idleChain(); }
+    return;
+  }
+  tap(zone);
+};
+stage.addEventListener('pointerup', release);
+stage.addEventListener('pointercancel', release);
+
+// ===== Menú de opciones (⋯) sobre el muñeco =====
+const menu = document.getElementById('menu'), menuBtn = document.getElementById('menuBtn');
+function paintMenu(){
+  menu.querySelector('[data-a=sleep]').textContent = svg.dataset.pose === 'sleep' ? '☀️ Despertar' : '😴 Dormir';
+  menu.querySelector('[data-a=mute]').textContent = muted ? '🔔 Activar frases' : '🔕 Silenciar frases';
+}
+if(!MOSTRAR_MENU) menuBtn.style.display='none';
+menuBtn.addEventListener('click', e => { e.stopPropagation(); paintMenu(); menu.classList.toggle('open'); });
+menu.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const a = b.dataset.a;
+  if(a === 'close'){
+    if(window.Android){ Android.close(); }
+    else { stage.style.display = 'none'; menu.classList.remove('open'); menuBtn.style.display = 'none';
+      const g = document.createElement('div'); g.textContent = '✕ Quitado (en el móvil desaparece de la pantalla)';
+      g.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:26px;font:600 15px sans-serif;color:#51607a'; document.body.appendChild(g); }
+    return;
+  }
+  if(a === 'sleep'){ token++; if(svg.dataset.pose === 'sleep'){ setState('idle'); setPose('stand'); idleChain(); } else { setState('idle'); setPose('sleep'); } }
+  else if(a === 'mute'){ muted = !muted; try { localStorage.setItem('chibiMute', muted ? '1' : '0'); } catch(e){} }
+  paintMenu(); menu.classList.remove('open');
+});
+// cerrar el menú si tocas fuera
+document.addEventListener('pointerdown', e => { if(menu.classList.contains('open') && !menu.contains(e.target) && e.target !== menuBtn) menu.classList.remove('open'); });
+
+// Foto: por defecto se ve el marco con un corazón; si existe foto.jpg, se muestra
+const _pi = document.getElementById('photoImg');
+if(_pi){ const probe = new Image(); probe.onload = () => { _pi.style.display = 'inline'; }; probe.src = 'foto.jpg'; }
+
+// Recordatorios de bienestar (cada ~40 min, solo si está tranquilo)
+setInterval(() => {
+  if(document.hidden) return;
+  if(svg.dataset.state === 'idle' && svg.dataset.pose === 'stand') say(pick(FRASES_BIEN), 3600);
+}, 40 * 60 * 1000);
+
+// Beso de buenas noches (una vez por noche, a la hora elegida)
+setInterval(() => {
+  const d = new Date(); if(d.getHours() !== HORA_BUENAS_NOCHES) return;
+  const today = d.toDateString();
+  try { if(localStorage.getItem('chibiNoche') === today) return; localStorage.setItem('chibiNoche', today); } catch(e){ return; }
+  token++; setPose('stand'); setState('idle'); void svg.getBoundingClientRect(); setState('kiss');
+  say(P('Buenas noches{n} 🌙 Te quiero'), 4200);
+  setTimeout(() => { setState('idle'); setPose('sleep'); }, 1700);
+}, 60 * 1000);
+
+idleChain();
+</script>
+</body>
+</html>
